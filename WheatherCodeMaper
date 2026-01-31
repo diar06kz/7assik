@@ -1,0 +1,27 @@
+//
+//  WeatherCodeMapper.swift
+//  7assik
+//
+//  Created by пароль1111 on 26.01.2026.
+//
+import Foundation
+
+enum WeatherCodeMapper {
+    // Very small mapping for “condition” text.
+    // You can extend later.
+    static func description(for code: Int) -> String {
+        switch code {
+        case 0: return "Clear"
+        case 1, 2, 3: return "Partly cloudy"
+        case 45, 48: return "Fog"
+        case 51, 53, 55: return "Drizzle"
+        case 61, 63, 65: return "Rain"
+        case 71, 73, 75: return "Snow"
+        case 80, 81, 82: return "Rain showers"
+        case 95: return "Thunderstorm"
+        case 96, 99: return "Thunderstorm w/ hail"
+        default: return "Unknown"
+        }
+    }
+}
+
