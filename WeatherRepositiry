@@ -1,0 +1,55 @@
+//
+//  WeatherRepository.swift
+//  7assik
+//
+//  Created by пароль1111 on 26.01.2026.
+//
+import Foundation
+
+struct WeatherResult {
+    let cityDisplayName: String
+    let savedAt: Date
+    let response: WeatherResponse
+    let isOffline: Bool
+}
+
+final class WeatherRepository {
+    private let api: WeatherAPI
+    private let cache: WeatherCache
+
+    init(api: WeatherAPI = WeatherAPI(), cache: WeatherCache = WeatherCache()) {
+        self.api = api
+        self.cache = cache
+    }
+
+    func loadWeather(cityQuery: String, unit: TemperatureUnit) async throws -> WeatherResult {
+        do {
+            let geo = try await api.geocode(city: cityQuery)
+            let response = try await api.fetchWeather(lat: geo.latitude, lon: geo.longitude, unit: unit)
+
+            let cityDisplay = [geo.name, geo.admin1, geo.country]
+                .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: ", ")
+
+            cache.save(cityDisplayName: cityDisplay, response: response)
+
+            return WeatherResult(
+                cityDisplayName: cityDisplay,
+                savedAt: Date(),
+                response: response,
+                isOffline: false
+            )
+        } catch {
+            // Fallback to cache
+            let cached = try cache.load()
+            return WeatherResult(
+                cityDisplayName: cached.city,
+                savedAt: cached.savedAt,
+                response: cached.response,
+                isOffline: true
+            )
+        }
+    }
+}
+
