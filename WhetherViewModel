@@ -1,0 +1,68 @@
+//
+//  WeatherViewModel.swift
+//  7assik
+//
+//  Created by пароль1111 on 26.01.2026.
+//
+import Foundation
+import Combine
+
+@MainActor
+final class WeatherViewModel: ObservableObject {
+    enum ScreenState {
+        case idle
+        case loading
+        case loaded(WeatherResult)
+        case error(String)
+    }
+
+    @Published var query: String = ""
+    @Published var unit: TemperatureUnit = .celsius {
+        didSet { saveUnit() }
+    }
+    @Published var state: ScreenState = .idle
+
+    private let repo: WeatherRepository
+    private let unitKey = "weather_unit"
+
+    init(repo: WeatherRepository? = nil) {
+        self.repo = repo ?? WeatherRepository()
+        loadUnit()
+    }
+
+
+    func search() {
+        Task {
+            await fetch()
+        }
+    }
+
+    func fetch() async {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if q.isEmpty {
+            state = .error(APIError.emptyQuery.localizedDescription)
+            return
+        }
+
+        state = .loading
+        do {
+            let result = try await repo.loadWeather(cityQuery: q, unit: unit)
+            state = .loaded(result)
+        } catch {
+            state = .error(error.localizedDescription)
+        }
+    }
+
+    // MARK: - Units persistence
+    private func loadUnit() {
+        if let raw = UserDefaults.standard.string(forKey: unitKey),
+           let u = TemperatureUnit(rawValue: raw) {
+            unit = u
+        }
+    }
+
+    private func saveUnit() {
+        UserDefaults.standard.set(unit.rawValue, forKey: unitKey)
+    }
+}
+
