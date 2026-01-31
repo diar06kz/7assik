@@ -1,0 +1,87 @@
+# 7assik — Weather App (SwiftUI)
+
+A simple iOS weather app built with **SwiftUI**. It shows the **current weather** and a **3-day forecast** for a выбранный city.  
+The app uses the **Open-Meteo** public API (no API key required), supports **°C/°F units**, and has an **offline mode** using cached data.
+
+---
+
+## ✨ Features
+- 🔎 Search weather by city name (geocoding → coordinates)
+- 🌤 Current weather: temperature, “feels like”, humidity, wind speed, condition (weather code)
+- 📅 3-day forecast (min/max + condition)
+- 📶 Offline mode: if there is no internet, the app shows the last saved response (cache)
+- ⚙️ Settings: switch **Celsius / Fahrenheit**
+- 🧱 Clean structure: API → Repository/Cache → ViewModel → Views
+
+---
+
+## 🛠 Tech Stack
+- SwiftUI
+- MVVM (`ObservableObject`, `@Published`)
+- `URLSession` + `async/await`
+- `Codable` (JSON decoding)
+- `UserDefaults` (cache + saved unit selection)
+- Error handling (city not found, no internet, server errors)
+
+---
+
+## 🌐 API (Open-Meteo)
+This project uses two endpoints:
+
+### 1) Geocoding (city search)
+`https://geocoding-api.open-meteo.com/v1/search?name={CITY}&count=1&language=en&format=json`
+
+Returns coordinates: `latitude`, `longitude`.
+
+### 2) Forecast (weather by coordinates)
+`https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&current=...&daily=...&forecast_days=3&temperature_unit={celsius|fahrenheit}&timezone=auto`
+
+Returns current weather (`current`) and forecast (`daily`).
+
+---
+
+## 📁 Project Structure (key files)
+- `__assikApp.swift` / `WeatherApp.swift` — app entry point (**Important: only one file should contain `@main`**)
+- `ContentView.swift` — main screen (search + results)
+- `SettingsView.swift` — settings screen (°C/°F)
+- `Models.swift` — `Codable` API models
+- `WeatherAPI.swift` — networking layer (geocoding + forecast)
+- `WeatherRepository.swift` — logic to load from network or fall back to cache
+- `WeatherCache.swift` — cache storage in `UserDefaults`
+- `WeatherViewModel.swift` — UI state + calls to repository
+- `WeatherCodeMapper.swift` — weather code → readable description
+- `WeatherCardView.swift` — UI card for current weather + forecast
+
+---
+
+## ▶️ How to Run
+1. Open the project in **Xcode**
+2. Select an iOS **Simulator** (e.g., iPhone 17 Pro Max)
+3. Press **Run** (▶) or **⌘R**
+4. Enter a city name (e.g., `Astana`) and tap **Search**
+
+---
+
+## 📶 Offline Mode (Cache Test)
+1. Run the app and search for any city (so data gets cached)
+2. Disable network in the Simulator
+3. Search again  
+✅ The app should display the last cached weather data (offline fallback)
+
+---
+
+## ✅ What This Project Demonstrates
+- Making HTTP requests using `URLSession` and `async/await`
+- Decoding JSON into Swift models using `Codable`
+- MVVM architecture in SwiftUI
+- Caching responses for offline usage
+- Basic settings persistence (°C/°F)
+
+---
+
+## 🚀 Possible Improvements
+- Search history / city suggestions
+- Weather icons based on weather code
+- Hourly forecast + more metrics (precipitation, pressure, etc.)
+- Smarter cache per city (store multiple cities)
+
