@@ -1,0 +1,42 @@
+//
+//  WeatherCache.swift
+//  7assik
+//
+//  Created by пароль1111 on 26.01.2026.
+//
+import Foundation
+
+final class WeatherCache {
+    private let keyData = "cached_weather_response_data"
+    private let keyCity = "cached_city_display_name"
+    private let keySavedAt = "cached_saved_at"
+
+    func save(cityDisplayName: String, response: WeatherResponse) {
+        do {
+            let data = try JSONEncoder().encode(response)
+            UserDefaults.standard.set(data, forKey: keyData)
+            UserDefaults.standard.set(cityDisplayName, forKey: keyCity)
+            UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: keySavedAt)
+        } catch {
+            // If encode fails, we silently ignore.
+        }
+    }
+
+    func load() throws -> (city: String, savedAt: Date, response: WeatherResponse) {
+        guard
+            let data = UserDefaults.standard.data(forKey: keyData),
+            let city = UserDefaults.standard.string(forKey: keyCity)
+        else { throw APIError.noCachedData }
+
+        let ts = UserDefaults.standard.double(forKey: keySavedAt)
+        let savedAt = Date(timeIntervalSince1970: ts == 0 ? Date().timeIntervalSince1970 : ts)
+
+        do {
+            let resp = try JSONDecoder().decode(WeatherResponse.self, from: data)
+            return (city, savedAt, resp)
+        } catch {
+            throw APIError.noCachedData
+        }
+    }
+}
+
