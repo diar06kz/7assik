@@ -1,0 +1,31 @@
+//
+//  SettingsView.swift
+//  7assik
+//
+//  Created by пароль1111 on 26.01.2026.
+//
+import SwiftUI
+
+struct SettingsView: View {
+    @Binding var unit: TemperatureUnit
+
+    var body: some View {
+        Form {
+            Section("Units") {
+                Picker("Temperature", selection: $unit) {
+                    ForEach(TemperatureUnit.allCases) { u in
+                        Text(u.title).tag(u)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
+            Section("Notes") {
+                Text("API: Open-Meteo (Geocoding + Forecast).")
+                Text("Offline mode uses the last successful response saved in UserDefaults.")
+            }
+        }
+        .navigationTitle("Settings")
+    }
+}
+
