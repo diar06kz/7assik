@@ -1,0 +1,106 @@
+//
+//  Models.swift
+//  7assik
+//
+//  Created by пароль1111 on 26.01.2026.
+//
+
+import Foundation
+
+// MARK: - Geocoding (Open-Meteo)
+struct GeocodingResponse: Codable {
+    let results: [GeoResult]?
+}
+
+struct GeoResult: Codable, Identifiable {
+    // Open-Meteo returns "id" sometimes; to be safe we build our own.
+    var id: String { "\(name)-\(latitude)-\(longitude)" }
+
+    let name: String
+    let latitude: Double
+    let longitude: Double
+    let country: String?
+    let admin1: String?
+    let timezone: String?
+}
+
+// MARK: - Weather (Open-Meteo Forecast)
+struct WeatherResponse: Codable {
+    let latitude: Double
+    let longitude: Double
+    let timezone: String
+    let current: CurrentWeather
+    let daily: DailyWeather
+}
+
+struct CurrentWeather: Codable {
+    let time: String
+
+    // We will request these fields:
+    let temperature2m: Double
+    let apparentTemperature: Double
+    let relativeHumidity2m: Int
+    let windSpeed10m: Double
+    let weatherCode: Int
+
+    enum CodingKeys: String, CodingKey {
+        case time
+        case temperature2m = "temperature_2m"
+        case apparentTemperature = "apparent_temperature"
+        case relativeHumidity2m = "relative_humidity_2m"
+        case windSpeed10m = "wind_speed_10m"
+        case weatherCode = "weather_code"
+    }
+}
+
+struct DailyWeather: Codable {
+    let time: [String]
+    let temperature2mMax: [Double]
+    let temperature2mMin: [Double]
+    let weatherCode: [Int]
+
+    enum CodingKeys: String, CodingKey {
+        case time
+        case temperature2mMax = "temperature_2m_max"
+        case temperature2mMin = "temperature_2m_min"
+        case weatherCode = "weather_code"
+    }
+}
+
+// MARK: - Units
+enum TemperatureUnit: String, CaseIterable, Identifiable, Codable {
+    case celsius
+    case fahrenheit
+
+    var id: String { rawValue }
+
+    var apiParam: String {
+        switch self {
+        case .celsius: return "celsius"
+        case .fahrenheit: return "fahrenheit"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .celsius: return "°C"
+        case .fahrenheit: return "°F"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .celsius: return "Celsius"
+        case .fahrenheit: return "Fahrenheit"
+        }
+    }
+}
+
+// MARK: - UI helper
+struct ForecastDay: Identifiable {
+    let id = UUID()
+    let dateISO: String
+    let min: Double
+    let max: Double
+    let code: Int
+}
