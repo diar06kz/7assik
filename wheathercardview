@@ -1,0 +1,122 @@
+//
+//  WeatherCardView.swift
+//  7assik
+//
+//  Created by пароль1111 on 26.01.2026.
+//
+import SwiftUI
+
+struct WeatherCardView: View {
+    let result: WeatherResult
+    let unitSymbol: String
+
+    var body: some View {
+        let r = result.response
+        let current = r.current
+
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(result.cityDisplayName)
+                        .font(.title3).bold()
+
+                    Text("Updated: \(formatISO(current.time))")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if result.isOffline {
+                    Text("OFFLINE")
+                        .font(.caption).bold()
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.thinMaterial)
+                        .clipShape(Capsule())
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(round1(current.temperature2m))\(unitSymbol) • \(WeatherCodeMapper.description(for: current.weatherCode))")
+                    .font(.headline)
+
+                HStack {
+                    InfoChip(title: "Feels", value: "\(round1(current.apparentTemperature))\(unitSymbol)")
+                    InfoChip(title: "Humidity", value: "\(current.relativeHumidity2m)%")
+                    InfoChip(title: "Wind", value: "\(round1(current.windSpeed10m)) m/s")
+                }
+            }
+
+            Divider()
+
+            Text("3-day forecast")
+                .font(.headline)
+
+            VStack(spacing: 8) {
+                ForEach(makeForecast(r.daily)) { day in
+                    HStack {
+                        Text(shortDate(day.dateISO))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text(WeatherCodeMapper.description(for: day.code))
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text("\(round1(day.min))\(unitSymbol) / \(round1(day.max))\(unitSymbol)")
+                            .frame(alignment: .trailing)
+                    }
+                    .font(.subheadline)
+                }
+            }
+        }
+        .padding()
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 8)
+    }
+
+    private func makeForecast(_ daily: DailyWeather) -> [ForecastDay] {
+        let count = min(3, daily.time.count, daily.temperature2mMin.count, daily.temperature2mMax.count, daily.weatherCode.count)
+        return (0..<count).map { i in
+            ForecastDay(
+                dateISO: daily.time[i],
+                min: daily.temperature2mMin[i],
+                max: daily.temperature2mMax[i],
+                code: daily.weatherCode[i]
+            )
+        }
+    }
+
+    private func round1(_ x: Double) -> String {
+        String(format: "%.1f", x)
+    }
+
+    private func formatISO(_ iso: String) -> String {
+        // Open-Meteo gives ISO-like strings. Keep simple.
+        iso.replacingOccurrences(of: "T", with: " ")
+    }
+
+    private func shortDate(_ iso: String) -> String {
+        // yyyy-mm-dd -> mm/dd or keep original
+        String(iso.prefix(10))
+    }
+}
+
+struct InfoChip: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.subheadline).bold()
+        }
+        .padding(10)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
